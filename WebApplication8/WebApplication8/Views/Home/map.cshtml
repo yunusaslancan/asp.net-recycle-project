@@ -1,0 +1,194 @@
+﻿
+@{
+    ViewBag.Title = "map";
+}
+<!---->
+<style>
+    /* Haritanın Sayfadaki Boyutları */
+    #map {
+        float:left;
+        height: 800px;
+        width: 1200px;
+    }
+    
+</style>
+<br />
+
+<br />
+
+    <div id="map"></div>
+    
+
+    <script>
+        var map;
+        
+        function initMap() {
+            
+            map = new google.maps.Map(document.getElementById('map'), {
+                
+                    center: { lat: 38.5102824, lng: 27.7054181 },
+                    zoom: 15,
+                    styles: [
+                        { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+                        { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+                        { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
+                        {
+                            featureType: 'administrative.locality',
+                            elementType: 'labels.text.fill',
+                            stylers: [{ color: '#d59563' }]
+                        },
+                        {
+                            featureType: 'poi',
+                            elementType: 'labels.text.fill',
+                            stylers: [{ color: '#d59563' }]
+                        },
+                        {
+                            featureType: 'poi.park',
+                            elementType: 'geometry',
+                            stylers: [{ color: '#263c3f' }]
+                        },
+                        {
+                            featureType: 'poi.park',
+                            elementType: 'labels.text.fill',
+                            stylers: [{ color: '#6b9a76' }]
+                        },
+                        {
+                            featureType: 'road',
+                            elementType: 'geometry',
+                            stylers: [{ color: '#38414e' }]
+                        },
+                        {
+                            featureType: 'road',
+                            elementType: 'geometry.stroke',
+                            stylers: [{ color: '#212a37' }]
+                        },
+                        {
+                            featureType: 'road',
+                            elementType: 'labels.text.fill',
+                            stylers: [{ color: '#9ca5b3' }]
+                        },
+                        {
+                            featureType: 'road.highway',
+                            elementType: 'geometry',
+                            stylers: [{ color: '#746855' }]
+                        },
+                        {
+                            featureType: 'road.highway',
+                            elementType: 'geometry.stroke',
+                            stylers: [{ color: '#1f2835' }]
+                        },
+                        {
+                            featureType: 'road.highway',
+                            elementType: 'labels.text.fill',
+                            stylers: [{ color: '#f3d19c' }]
+                        },
+                        {
+                            featureType: 'transit',
+                            elementType: 'geometry',
+                            stylers: [{ color: '#2f3948' }]
+                        },
+                        {
+                            featureType: 'transit.station',
+                            elementType: 'labels.text.fill',
+                            stylers: [{ color: '#d59563' }]
+                        },
+                        {
+                            featureType: 'water',
+                            elementType: 'geometry',
+                            stylers: [{ color: '#17263c' }]
+                        },
+                        {
+                            featureType: 'water',
+                            elementType: 'labels.text.fill',
+                            stylers: [{ color: '#515c6d' }]
+                        },
+                        {
+                            featureType: 'water',
+                            elementType: 'labels.text.stroke',
+                            stylers: [{ color: '#17263c' }]
+                        }
+                    ]
+                
+
+            });
+            $.get("@Url.Action("GetAllLocation","Home")", function (data , status) {
+                var marker = [];
+                var contentString = [];
+                var infowindow = [];
+                for (var i = 0; i < data.length; i++) {
+                    marker[i] = new google.maps.Marker({
+                        position: { lat: data[i].lat, lng: data[i].lng },
+                        map: map
+                    });
+                    contentString[i] = '<div id="content">' +
+                        '<div id="siteNotice">' +
+                        '</div>' +
+                        '<h1 id="firstHeading" class="firstHeading">' + data[i].name + '</h1>' +
+                        '<div id="bodyContent">' +
+                        '<p><b>' + data[i].type + '</b>';
+                    infowindow[i] = new google.maps.InfoWindow({
+                        content: contentString[i]
+                    });
+                    var markerValue = marker[i];
+                    google.maps.event.addListener(marker[i], 'mouseover', (function (markerValue, i) {
+                        return function () {
+
+                            infowindow[i].open(map, marker[i]);
+                        }
+                    })(marker[i], i));
+
+                    google.maps.event.addListener(marker[i], 'mouseout', (function (markerValue, i) {
+                        return function () {
+                            infowindow[i].close();
+                        }
+                    })(marker[i], i));
+                }
+            })
+            
+            infoWindow = new google.maps.InfoWindow;
+
+            // GoogleMaps Geolocation-Konum Bilgisi.
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var pos = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    infoWindow.setPosition(pos);
+                    infoWindow.setContent('You Are Here');
+                    infoWindow.open(map);
+                    map.setCenter(pos);
+                    var marker = new google.maps.Marker({
+                    draggable: true,
+                    position: {lat: position.coords.latitude, lng: 
+                    position.coords.longitude},
+                    map: map
+                });
+                    },
+                    function () {
+                    handleLocationError(true, infoWindow, map.getCenter());
+
+                });
+
+            } else {
+                // Tarayıcı Konumu Bulamıyor ya da Desteklemiyordur.
+                handleLocationError(false, infoWindow, map.getCenter());
+            }
+        }
+
+        function handleLocationError(browserHasGeolocation, infoWindow, pos) {
+            infoWindow.setPosition(pos);
+            infoWindow.setContent(browserHasGeolocation ?
+                'Hata: Konum servisi hatası.' :
+                'Hata: Tarayıcınız konum servisini desteklememektedir. ');
+            infoWindow.open(map);
+        }
+    </script>
+    <!--Google Maps Api Ekleme işlemi Yapılmıştır.
+    -->
+    <script async defer
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDsQfq9jzd4ChHS8qGYyc-drUYPjIghoPQ&callback=initMap">
+    </script>
+
+
